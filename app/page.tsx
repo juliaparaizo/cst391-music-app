@@ -20,7 +20,7 @@ export default function Home() {
             CST-391-Milestone 3-API
           </p>
           <p className="max-w-md text-base leading-7 text-zinc-500 dark:text-zinc-400">
-            This is my first deployment
+            This is my second deployment
           </p>
         </div>
         <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
