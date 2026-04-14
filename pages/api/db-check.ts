@@ -19,14 +19,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ok: true,
       time: now,
       artist,
-      message: `Julia Paraizo Database connection successful. Running in ${environment}. DATABASE_URL: ${dbUrl}`,
+      message: `Julia Paraizo Database connection successful. Running in ${environment}.`,
     });
   } catch (err: any) {
     res.status(500).json({
       ok: false,
       error: "Database connection failed",
       details: err?.message,
-      message: `Julia Paraizo Database connection failed. Running in ${environment}. DATABASE_URL: ${dbUrl}`,
+      message: `Julia Paraizo Database connection failed. Running in ${environment}.`,
     });
   }
 }
