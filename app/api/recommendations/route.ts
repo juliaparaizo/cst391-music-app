@@ -1,34 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '@/lib/db';
+import { getSession } from '@/lib/session';
+import * as recService from '@/lib/services/recommendationsService';
 
 export const runtime = 'nodejs';
 
+// GET /api/recommendations — public (guests, customers, admins)
 export async function GET() {
   try {
-    const pool = getPool();
-    const result = await pool.query(`
-      SELECT rec.id, r.name as rule_name, a.title as album_title, a.artist, a.year
-      FROM recommendations rec
-      JOIN rules r ON rec.rule_id = r.id
-      JOIN albums a ON rec.album_id = a.id
-      ORDER BY rec.created_at DESC
-    `);
-    return NextResponse.json(result.rows, { status: 200 });
-  } catch (error) {
+    const recommendations = await recService.getRecommendations();
+    return NextResponse.json(recommendations, { status: 200 });
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch recommendations' }, { status: 500 });
   }
 }
 
+// POST /api/recommendations — admin only (link a rule to an album)
 export async function POST(request: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  if (session.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
   try {
     const { rule_id, album_id } = await request.json();
-    const pool = getPool();
-    const result = await pool.query(
-      `INSERT INTO recommendations (rule_id, album_id) VALUES ($1, $2) RETURNING id`,
-      [rule_id, album_id]
-    );
-    return NextResponse.json({ id: result.rows[0].id }, { status: 201 });
+    const result = await recService.linkRuleToAlbum(rule_id, album_id);
+    return NextResponse.json({ id: result.id }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create recommendation' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Failed to create recommendation';
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
